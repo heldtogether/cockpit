@@ -11,7 +11,10 @@ if tmux has-session -t "$OUTER_SESSION" 2>/dev/null; then
   exec tmux attach -t "$OUTER_SESSION"
 fi
 
-tmux -f /dev/null new-session -d -s "$OUTER_SESSION" -n cockpit
+COLS="$(tput cols)"
+LINES="$(tput lines)"
+
+tmux -f /dev/null new-session -d -x "$COLS" -y "$LINES" -s "$OUTER_SESSION" -n cockpit
 
 tmux set-option -g -t "$OUTER_SESSION" prefix C-a
 tmux unbind C-b || true

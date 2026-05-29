@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+set -eu
+
+OUTER_SESSION="cockpit"
+INNER_SESSION="workspace"
+INNER_SOCKET="cockpit-inner"
+
+NOTES_WIDTH="${NOTES_WIDTH:-84}"
+
+if tmux has-session -t "$OUTER_SESSION" 2>/dev/null; then
+  exec tmux attach -t "$OUTER_SESSION"
+fi
+
+tmux -f /dev/null new-session -d -s "$OUTER_SESSION" -n cockpit
+
+tmux set-option -g -t "$OUTER_SESSION" prefix C-a
+tmux unbind C-b || true
+tmux bind C-a send-prefix
+
+tmux send-keys -t "$OUTER_SESSION:cockpit.0" "nvim ~" C-m
+
+tmux split-window -h -t "$OUTER_SESSION:cockpit.0" \
+  "tmux -L '$INNER_SOCKET' -f /dev/null new-session -A -s '$INNER_SESSION'"
+
+tmux resize-pane -t "$OUTER_SESSION:cockpit.0" -x "$NOTES_WIDTH"
+tmux select-pane -t "$OUTER_SESSION:cockpit.1"
+
+exec tmux attach -t "$OUTER_SESSION"
